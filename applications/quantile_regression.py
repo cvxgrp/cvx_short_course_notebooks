@@ -60,7 +60,7 @@ def _(mo):
         The plots below show $\phi(u)$ for $\tau= 0.5$, $\tau= 0.1$, and $\tau= 0.9$.
 
         """
-        + mo.image(mo.notebook_dir() / "tilted_l1.png").text
+        + mo.image("https://github.com/cvxgrp/cvx_short_course_notebooks/blob/main/applications/tilted_l1.png?raw=true").text
         + r"""
 
         In quantile regression we choose $\beta,v$ to minimize $\sum_i \phi(r_i)$.

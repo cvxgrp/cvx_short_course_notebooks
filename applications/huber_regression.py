@@ -63,7 +63,7 @@ def _(mo):
     The image below shows the square function on the left and the Huber function on the right.
 
     """
-    + mo.image(mo.notebook_dir() / "huber_vs_square.png").text
+    + mo.image("https://github.com/cvxgrp/cvx_short_course_notebooks/blob/main/applications/huber_vs_square.png?raw=true").text
     + r"""
 
     Huber regression is the same as standard (least-squares) regression for small residuals, but allows (some)
