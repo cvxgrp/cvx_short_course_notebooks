@@ -19,7 +19,7 @@ def _(mo):
     mo.md(
         r"""
         We consider the problem of rebalancing a portfolio of assets over multiple periods.
-        We let $h_t \in \mathbb{R}^n$ denote the vector of our dollar value 
+        We let $h_t \in \mathbf{R}^n$ denote the vector of our dollar value 
         holdings in $n$ assets,
         at the beginning of period $t$, for $t=1,\ldots, T$,
         with negative entries meaning short positions.
@@ -55,7 +55,7 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        where $w\in \mathbb{R}^n$ is the variable, $\mu$ is the mean return,
+        where $w\in \mathbf{R}^n$ is the variable, $\mu$ is the mean return,
         $\Sigma\in \mathbb{S}_{++}^n$ is the return covariance, and $\gamma>0$ is the
         risk aversion parameter.  The data $\mu$, $\Sigma$, and $\gamma$ are given.
         In words, the target weights maximize the risk-adjusted expected return.
@@ -89,8 +89,8 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        with variable $w \in \mathbb{R}^n$,
-        where $\kappa\in\mathbb{R}^n_+$ is the vector of (so-called linear) transaction costs
+        with variable $w \in \mathbf{R}^n$,
+        where $\kappa\in\mathbf{R}^n_+$ is the vector of (so-called linear) transaction costs
         for the assets. (For example, these could model bid/ask spread.)
         Thus, we choose the post-trade weights to maximize the risk-adjusted expected
         return, minus the transactions costs associated with rebalancing the portfolio.
@@ -102,7 +102,7 @@ def _(mo):
 
         After holding the rebalanced portfolio over the investment period,
         the dollar value of our portfolio becomes $h_{t+1} = \text{diag}(r_t) \tilde h_t$,
-        where $r_t \in \mathbb{R}^n_{++}$ is the (random) vector of asset returns
+        where $r_t \in \mathbf{R}^n_{++}$ is the (random) vector of asset returns
         over period $t$, and $\tilde h_t$ is the post-trade portfolio
         given in dollar values (which you do not need to know).
         The next weight vector is then given by

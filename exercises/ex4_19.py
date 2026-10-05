@@ -150,7 +150,7 @@ def _():
     import cvxpy as cp
 
     # TODO: your code here
-    # store the optimal speeds in s
+    # Store the optimal speeds in s.
     return
 
 

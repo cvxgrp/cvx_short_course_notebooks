@@ -29,7 +29,7 @@ def _(mo):
         r"""
     ## Problem 1.
 
-    $\min\{  \sqrt{x^2 + 1 } : x \in \mathbb{R} \}$
+    $\min\{  \sqrt{x^2 + 1 } : x \in \mathbf{R} \}$
     """
     )
     return
@@ -69,7 +69,7 @@ def _(mo):
     mo.md(
         r"""
     ## Problem 3.
-    $\min\{ x + 2 \,:\, 5 \leq 2 / x^2,~~ x \in \mathbb{R} \}$
+    $\min\{ x + 2 \,:\, 5 \leq 2 / x^2,~~ x \in \mathbf{R} \}$
     """
     )
     return
@@ -147,7 +147,7 @@ def _(mo):
         r"""
     ## Bonus Problem 2.
 
-    $\min\left\{ \sum_{i=1}^m c_i \frac{x_i}{u_i - x_i} \,:\, ~  u > x,~~ x \in \mathbb{R}^m \right\}$
+    $\min\left\{ \sum_{i=1}^m c_i \frac{x_i}{u_i - x_i} \,:\, ~  u > x,~~ x \in \mathbf{R}^m \right\}$
 
     where $c$ and $u$ are nonnegative vectors.
     """

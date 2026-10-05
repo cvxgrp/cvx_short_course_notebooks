@@ -114,7 +114,7 @@ def _(Gstar, n):
 
     v = cp.Variable(n)
     # TODO: your code here
-
+    # Store the maximum growth rate in Gstar.
 
     print(Gstar)
     return

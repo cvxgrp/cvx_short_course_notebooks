@@ -62,13 +62,24 @@ def _():
 
 
 @app.cell
-def _(Sigma, n, np, risk, w_unif):
+def _(Sigma, n, np, w_unif):
     import cvxpy as cp
     _w = cp.Variable(n)
     print(f'Risk for uniform: {np.sqrt(w_unif @ Sigma @ w_unif):.1%}')
-    print(f'Risk for unconstrained: {np.sqrt(risk.value):.1%}')
-    print(f'Risk for long only: {np.sqrt(risk.value):.1%}')
-    print(f'Risk for limit on short: {np.sqrt(risk.value):.1%}')
+
+    # TODO: your code here
+    # Solve the problem with no additional constraints; store the
+    # portfolio return variance (a CVXPY expression) in _risk.
+    print(f'Risk for unconstrained: {np.sqrt(_risk.value):.1%}')
+
+    # TODO: your code here
+    # Solve the long-only problem; store the variance in _risk.
+    print(f'Risk for long only: {np.sqrt(_risk.value):.1%}')
+
+    # TODO: your code here
+    # Solve the problem with the limit on total short position; store
+    # the variance in _risk.
+    print(f'Risk for limit on short: {np.sqrt(_risk.value):.1%}')
     return (cp,)
 
 
@@ -87,28 +98,35 @@ def _(mo):
 
 
 @app.cell
-def _(cp, expec_return, n, np, prob, risk):
+def _(cp, n, np):
     import matplotlib.pyplot as plt
     _w = cp.Variable(n)
     gamma = cp.Parameter(nonneg=True)
     N = 128
     gamma_vals = np.logspace(-1, 5, num=N)
+
+    # TODO: your code here
+    # Define the long-only problem _prob, with expected return
+    # _expec_return and variance _risk traded off by gamma.
     return_vec1 = np.zeros(N)
     risk_vec1 = np.zeros(N)
     for i in range(N):
         gamma.value = gamma_vals[i]
-        prob.solve()
-        return_vec1[i] = expec_return.value
-        risk_vec1[i] = risk.value
+        _prob.solve()
+        return_vec1[i] = _expec_return.value
+        risk_vec1[i] = _risk.value
     plt.figure()
     plt.plot(np.sqrt(risk_vec1) * 100, return_vec1 * 100, label='Long only')
+
+    # TODO: your code here
+    # Redefine _prob for total short position limited to 0.5.
     return_vec2 = np.zeros(N)
     risk_vec2 = np.zeros(N)
     for i in range(N):
         gamma.value = gamma_vals[i]
-        prob.solve()
-        return_vec2[i] = expec_return.value
-        risk_vec2[i] = risk.value
+        _prob.solve()
+        return_vec2[i] = _expec_return.value
+        risk_vec2[i] = _risk.value
     plt.plot(np.sqrt(risk_vec2) * 100, return_vec2 * 100, label='Limit on short')
     plt.legend()
     plt.xlabel('Risk in %')

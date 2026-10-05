@@ -119,18 +119,20 @@ def _():
     y = A @ true_x + v
 
     x = cp.Variable(n)
-    gamma = None  # set me! Initialize to 1.
+    # TODO: your code here
+    # Define gamma as a nonnegative CVXPY parameter with initial value 1.
+    gamma = None
     return cp, n, np, true_x, x
 
 
 @app.cell
 def _(cp, n, np, true_x, x):
-    ridge_loss = None # set me
+    ridge_loss = None  # TODO: your code here
     ridge = cp.Problem(cp.Minimize(ridge_loss))
     ridge.solve(solver='CLARABEL')
     x_ridge = x.value
 
-    lasso_loss = None # set me
+    lasso_loss = None  # TODO: your code here
     lasso = cp.Problem(cp.Minimize(lasso_loss))
     lasso.solve(solver='CLARABEL')
     x_lasso = x.value
@@ -151,10 +153,9 @@ def _(np):
     import dask
 
     def get_x(gamma_val):
-        # set the regularization parameter
-        # gamma to gamma_val. Solve the problem
-        # with the CLARABEL solver. Return the 
-        # optimal "x".
+        # TODO: your code here
+        # Set the regularization parameter gamma to gamma_val, solve the
+        # problem with the CLARABEL solver, and return the optimal x.
         return None
 
     num_gamma = 30

@@ -10,11 +10,11 @@ def _(mo):
         r"""
         # Portfolio optimization using multiple risk models
 
-        Let $w \in \mathbb{R}^n$ be a vector of portfolio weights,
+        Let $w \in \mathbf{R}^n$ be a vector of portfolio weights,
         where negative values correspond to short positions,
         and the weights are normalized such that $\mathbb{1}^T w = 1$.
         The expected return of the portfolio is $\mu^T w$,
-        where $\mu\in \mathbb{R}^n$ is the (known) vector of expected asset returns.
+        where $\mu\in \mathbf{R}^n$ is the (known) vector of expected asset returns.
 
         As usual we measure the risk of the portfolio
         using the variance of the portfolio return.
@@ -184,6 +184,14 @@ def _():
         [    0.0, 0.03255, 0.04758, 0.03123, 0.03734,  0.0505, 0.02845, 0.02057,  0.0291, 0.04176],
     ])
     # fmt: on
+    return
+
+
+@app.cell
+def _():
+    import cvxpy as cp
+
+    # TODO: your code here
     return
 
 

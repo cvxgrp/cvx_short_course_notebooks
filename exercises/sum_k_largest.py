@@ -42,7 +42,9 @@ def _():
     import itertools
 
     def sum_abs_largest(expr, k):
-        # implement me!
+        # TODO: your code here
+        # Return a CVXPY expression for the sum of the k largest entries
+        # of |expr|, without using cp.sum_largest.
         return None
     return cp, sum_abs_largest
 

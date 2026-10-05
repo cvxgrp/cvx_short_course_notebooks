@@ -93,6 +93,10 @@ def _(T):
     _C, _D = 5, 5
     q = cp.Variable(T)
     c = cp.Variable(T)
+
+    # TODO: your code here
+    # Define and solve the problem; the plotting code below uses
+    # c.value and q.value.
     return c, cp, q
 
 
@@ -135,25 +139,29 @@ def _(mo):
 
 
 @app.cell
-def _(T, cp, np, plt, prob):
+def _(T, cp, np, p, plt, u):
     N = 31
     Qs = np.linspace(0, 150, num=N)
     q_1 = cp.Variable(T)
     c_1 = cp.Variable(T)
     _Q = cp.Parameter()
     _C, _D = cp.Parameter(), cp.Parameter()
+
+    # TODO: your code here
+    # Define the problem _prob in terms of q_1, c_1, _Q, _C, and _D.
+
     _C.value = 1
     _D.value = 1
     cost1 = np.zeros(N)
     for i in range(N):
         _Q.value = Qs[i]
-        cost1[i] = prob.solve()
+        cost1[i] = _prob.solve()
     _C.value = 3
     _D.value = 3
     cost2 = np.zeros(N)
     for i in range(N):
         _Q.value = Qs[i]
-        cost2[i] = prob.solve()
+        cost2[i] = _prob.solve()
     plt.figure(3)
     plt.plot(Qs, cost2, 'g--', label='C = D = 3')
     plt.plot(Qs, cost1, 'b.-', label='C = D = 1')
