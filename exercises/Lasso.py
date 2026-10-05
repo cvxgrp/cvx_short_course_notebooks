@@ -1,103 +1,87 @@
 import marimo
 
-__generated_with = "0.13.4"
+__generated_with = "0.24.2"
 app = marimo.App()
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        # LASSO
-        """
-    )
+    mo.md(r"""
+    # LASSO
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        We wish to recover a sparse vector $x \in \mathbf{R}^n$ from measurements $y \in \mathbf{R}^m$. Our measurement model tells us that
-        """
-    )
+    mo.md(r"""
+    We wish to recover a sparse vector $x \in \mathbf{R}^n$ from measurements $y \in \mathbf{R}^m$. Our measurement model tells us that
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        $$
-        y = Ax + v,
-        $$
-        """
-    )
+    mo.md(r"""
+    $$
+    y = Ax + v,
+    $$
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        where $A \in \mathbf{R}^{m \times n}$ is a known matrix and $v \in \mathbf{R}^m$ is unknown measurement error.
-        For our demonstration the entries of $v$ are sampled from the normal distribution with mean zero and
-        standard deviation $\sigma$ (by default, $\sigma = 1$).
+    mo.md(r"""
+    where $A \in \mathbf{R}^{m \times n}$ is a known matrix and $v \in \mathbf{R}^m$ is unknown measurement error.
+    For our demonstration the entries of $v$ are sampled from the normal distribution with mean zero and
+    standard deviation $\sigma$ (by default, $\sigma = 1$).
 
-        We can first try to recover $x$ by solving the optimization problem
-        """
-    )
+    We can first try to recover $x$ by solving the optimization problem
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        $$
-        \begin{array}{ll} \text{minimize} & ||Ax - y||^2_2 + \gamma ||x||^2_2.\\
-        \end{array}
-        $$
-        """
-    )
+    mo.md(r"""
+    $$
+    \begin{array}{ll} \text{minimize} & ||Ax - y||^2_2 + \gamma ||x||^2_2.\\
+    \end{array}
+    $$
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        This problem is called ridge regression.
+    mo.md(r"""
+    This problem is called ridge regression.
 
-        The code below defines $n$, $m$, $A$, $x$, and $y$. Use CVXPY to estimate $x$ from $y$ using ridge regression. Try multiple
-        values of $\gamma$. Use the plotting code to compare the estimated $x$ with the true $x$.
+    The code below defines $n$, $m$, $A$, $x$, and $y$. Use CVXPY to estimate $x$ from $y$ using ridge regression. Try multiple
+    values of $\gamma$. Use the plotting code to compare the estimated $x$ with the true $x$.
 
-        A more effective approach is to solve the LASSO problem
-        """
-    )
+    A more effective approach is to solve the LASSO problem
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        $$
-        \begin{array}{ll} \text{minimize} & ||Ax - y||^2_2 + \gamma \|x\|_1.\\
-        \end{array}
-        $$
-        """
-    )
+    mo.md(r"""
+    $$
+    \begin{array}{ll} \text{minimize} & ||Ax - y||^2_2 + \gamma \|x\|_1.\\
+    \end{array}
+    $$
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        How many measurements $m$ are needed to find an accurate $x$ with ridge regression? How about with the LASSO?
-        """
-    )
+    mo.md(r"""
+    How many measurements $m$ are needed to find an accurate $x$ with ridge regression? How about with the LASSO?
+    """)
     return
 
 
@@ -129,12 +113,12 @@ def _():
 def _(cp, n, np, true_x, x):
     ridge_loss = None  # TODO: your code here
     ridge = cp.Problem(cp.Minimize(ridge_loss))
-    ridge.solve(solver='CLARABEL')
+    ridge.solve()
     x_ridge = x.value
 
     lasso_loss = None  # TODO: your code here
     lasso = cp.Problem(cp.Minimize(lasso_loss))
-    lasso.solve(solver='CLARABEL')
+    lasso.solve()
     x_lasso = x.value
 
     import matplotlib.pyplot as plt
@@ -191,6 +175,7 @@ def _(np, plt, t_dask, t_loop, true_x, xs_dask, xs_loop):
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
