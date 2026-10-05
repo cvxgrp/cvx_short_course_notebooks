@@ -50,7 +50,7 @@ def _(gamma, np, prob, x):
     x_values = []
     for val in gamma_vals:
         gamma.value = val
-        prob.solve(solver='CLARABEL')
+        prob.solve()
         x_values.append(x.value)
     return gamma_vals, x_values
 
@@ -65,7 +65,7 @@ def _(gamma, gamma_vals, prob, x):
     # Function maps gamma value to optimal x.
     def get_x(gamma_value):
         gamma.value = gamma_value
-        prob.solve(solver='CLARABEL')
+        prob.solve()
         return x.value
 
     dasklist = [dask.delayed(get_x)(val) for val in gamma_vals]
@@ -77,9 +77,6 @@ def _(gamma, gamma_vals, prob, x):
 def _(gamma_vals, n, x_values):
     # Plot regularization path.
     import matplotlib.pyplot as plt
-
-    # magic command not supported in marimo; please file an issue to add support
-    # %config InlineBackend.figure_format = 'svg'
 
     for i in range(n):
         plt.plot(gamma_vals, [xi[i] for xi in x_values])
