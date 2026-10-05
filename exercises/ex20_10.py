@@ -69,15 +69,13 @@ def _():
 
     np.random.seed(1)
     T = 96
-    t = np.linspace(1, T, num=T).reshape(T)
+    t = np.arange(1, T + 1)
     p = np.exp(-np.cos((t - 15) * 2 * np.pi / T) + 0.01 * np.random.randn(T))
     u = 2 * np.exp(
         -0.6 * np.cos((t + 40) * np.pi / T)
         - 0.7 * np.cos(t * 4 * np.pi / T)
         + 0.01 * np.random.randn(T)
     )
-    p = p
-    u = u
     plt.figure(1)
     plt.plot(t / 4, p, "g", label=r"$p$")
     plt.plot(t / 4, u, "r", label=r"$u$")
@@ -85,24 +83,24 @@ def _():
     plt.xlabel("t")
     plt.legend()
     plt.show()
-    return T, np, p, plt, u
+    return T, np, p, plt, t, u
 
 
 @app.cell
 def _(T):
     import cvxpy as cp
     _Q = 35
-    _C, _D = (5, 5)
+    _C, _D = 5, 5
     q = cp.Variable(T)
     c = cp.Variable(T)
     return c, cp, q
 
 
 @app.cell
-def _(T, c, np, p, plt, q, u):
+def _(c, p, plt, q, t, u):
     # Plot the optimal u and q against c and p.
     plt.figure(2)
-    ts = np.linspace(1, T, num=T) / 4
+    ts = t / 4
     plt.subplot(3, 1, 1)
     plt.plot(ts, u, "r")
     plt.plot(ts, c.value, "b")
@@ -143,7 +141,7 @@ def _(T, cp, np, plt, prob):
     q_1 = cp.Variable(T)
     c_1 = cp.Variable(T)
     _Q = cp.Parameter()
-    _C, _D = (cp.Parameter(), cp.Parameter())
+    _C, _D = cp.Parameter(), cp.Parameter()
     _C.value = 1
     _D.value = 1
     cost1 = np.zeros(N)

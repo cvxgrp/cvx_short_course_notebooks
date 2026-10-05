@@ -32,15 +32,13 @@ def _(A, b, n):
     # Form and solve problem.
     import cvxpy as cp
 
-
     gamma = cp.Parameter(nonneg=True)
     gamma.value = 1
     x = cp.Variable(n)
     cost = cp.sum_squares(A @ x - b) + gamma * cp.norm(x, 1)
     prob = cp.Problem(cp.Minimize(cost), [cp.norm(x, "inf") <= 1])
-    opt_val = prob.solve()
-    solution = x.value
-    return gamma, prob, x
+    prob.solve()
+    return cp, gamma, prob, x
 
 
 @app.cell
@@ -52,20 +50,23 @@ def _(gamma, np, prob, x):
         gamma.value = val
         prob.solve()
         x_values.append(x.value)
+    x_values = np.array(x_values)
     return gamma_vals, x_values
 
 
 @app.cell
-def _(gamma, gamma_vals, prob, x):
+def _(A, b, cp, gamma_vals, n):
     # Parallel style trade-off curve.
 
-    # Use tools for parallelism in standard library.
+    # Use dask for parallelism.
     import dask
 
     # Function maps gamma value to optimal x.
+    # Each call builds its own problem, since the threads must not share a Parameter.
     def get_x(gamma_value):
-        gamma.value = gamma_value
-        prob.solve()
+        x = cp.Variable(n)
+        cost = cp.sum_squares(A @ x - b) + gamma_value * cp.norm(x, 1)
+        cp.Problem(cp.Minimize(cost), [cp.norm(x, "inf") <= 1]).solve()
         return x.value
 
     dasklist = [dask.delayed(get_x)(val) for val in gamma_vals]
@@ -74,12 +75,11 @@ def _(gamma, gamma_vals, prob, x):
 
 
 @app.cell
-def _(gamma_vals, n, x_values):
+def _(gamma_vals, x_values):
     # Plot regularization path.
     import matplotlib.pyplot as plt
 
-    for i in range(n):
-        plt.plot(gamma_vals, [xi[i] for xi in x_values])
+    plt.plot(gamma_vals, x_values)
     plt.xlabel(r"$\gamma$", fontsize=16)
     plt.ylabel(r"$x_i$", fontsize=16)
     plt.xscale("log")

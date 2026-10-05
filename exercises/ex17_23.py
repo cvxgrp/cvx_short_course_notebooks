@@ -169,8 +169,8 @@ def _(mo):
 
 
 @app.cell
-def _(us, w_star, ws):
-    # data and code for multiperiod portfolio rebalancing problem
+def _():
+    # data for multiperiod portfolio rebalancing problem
     import numpy as np
 
     T = 100
@@ -187,14 +187,22 @@ def _(us, w_star, ws):
         ]
     )
     mu = np.array([1.02, 1.028, 1.01, 1.034, 1.017])
-    kappa_1 = np.array([0.002, 0.002, 0.002, 0.002, 0.002])
-    kappa_2 = np.array([0.004, 0.004, 0.004, 0.004, 0.004])
+    kappa_1 = np.full(n, 0.002)
+    kappa_2 = np.full(n, 0.004)
 
     ## Generate returns
     # call this function to generate a vector r of market returns
-    generateReturns = lambda: np.random.multivariate_normal(mu, Sigma)
+    def generate_returns():
+        return np.random.multivariate_normal(mu, Sigma)
 
-    ## Plotting code
+    return T, n, np, threshold
+
+
+@app.cell
+def _():
+    import cvxpy as cp
+
+    # TODO: your code here
     # You must provide three objects:
     # - ws: np.array of size T x n,
     #       the post-trade weights w_t_tilde;
@@ -202,14 +210,20 @@ def _(us, w_star, ws):
     #       the trades at each period: w_t_tilde - w_t;
     # - w_star: np.array of size n,
     #       the "target" solution w_star.
+    return
+
+
+@app.cell
+def _(T, n, np, threshold, us, w_star, ws):
+    ## Plotting code
     import matplotlib.pyplot as plt
 
     colors = ["b", "r", "g", "c", "m"]
     plt.figure(figsize=(13, 5))
     for j in range(n):
         plt.plot(range(T), ws[:, j], colors[j])
-        plt.plot(range(T), [w_star[j]] * T, colors[j] + "--")
-        non_zero_trades = abs(us[:, j]) > threshold
+        plt.axhline(w_star[j], color=colors[j], linestyle="--")
+        non_zero_trades = np.abs(us[:, j]) > threshold
         plt.plot(np.arange(T)[non_zero_trades], ws[non_zero_trades, j], colors[j] + "o")
     plt.ylabel("post-trade weights")
     plt.xlabel("period $t$")

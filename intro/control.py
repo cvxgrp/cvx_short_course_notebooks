@@ -98,14 +98,13 @@ def _():
     A = np.eye(n) - alpha * np.random.rand(n, n)
     B = np.random.randn(n, m)
     x_0 = beta * np.random.randn(n)
-    return A, B, T, m, n, np, x_0
+    return A, B, T, m, n, x_0
 
 
 @app.cell
 def _(A, B, T, m, n, x_0):
     # Form and solve control problem.
     import cvxpy as cp
-
 
     x = cp.Variable((n, T + 1))
     u = cp.Variable((m, T))
@@ -134,46 +133,34 @@ def _(mo):
 
 
 @app.cell
-def _(np, u, x):
+def _(u, x):
     # Plot results.
     import matplotlib.pyplot as plt
 
-    # magic command not supported in marimo; please file an issue to add support
-    # %config InlineBackend.figure_format = 'svg'
-
-    f = plt.figure()
+    fig, axs = plt.subplots(4, 1, sharex=True)
 
     # Plot (u_t)_1.
-    ax = f.add_subplot(411)
-    plt.plot(u[0, :].value)
-    plt.ylabel(r"$(u_t)_1$", fontsize=16)
-    plt.yticks(np.linspace(-1.0, 1.0, 3))
-    plt.xticks([])
+    axs[0].plot(u[0, :].value)
+    axs[0].set_ylabel(r"$(u_t)_1$", fontsize=16)
+    axs[0].set_yticks([-1, 0, 1])
 
     # Plot (u_t)_2.
-    plt.subplot(4, 1, 2)
-    plt.plot(u[1, :].value)
-    plt.ylabel(r"$(u_t)_2$", fontsize=16)
-    plt.yticks(np.linspace(-1, 1, 3))
-    plt.xticks([])
+    axs[1].plot(u[1, :].value)
+    axs[1].set_ylabel(r"$(u_t)_2$", fontsize=16)
+    axs[1].set_yticks([-1, 0, 1])
 
     # Plot (x_t)_1.
-    plt.subplot(4, 1, 3)
-    x1 = x[0, :].value
-    plt.plot(x1)
-    plt.ylabel(r"$(x_t)_1$", fontsize=16)
-    plt.yticks([-10, 0, 10])
-    plt.ylim([-10, 10])
-    plt.xticks([])
+    axs[2].plot(x[0, :].value)
+    axs[2].set_ylabel(r"$(x_t)_1$", fontsize=16)
+    axs[2].set_yticks([-10, 0, 10])
+    axs[2].set_ylim([-10, 10])
 
     # Plot (x_t)_2.
-    plt.subplot(4, 1, 4)
-    x2 = x[1, :].value
-    plt.plot(range(51), x2)
-    plt.yticks([-25, 0, 25])
-    plt.ylim([-25, 25])
-    plt.ylabel(r"$(x_t)_2$", fontsize=16)
-    plt.xlabel(r"$t$", fontsize=16)
+    axs[3].plot(x[1, :].value)
+    axs[3].set_ylabel(r"$(x_t)_2$", fontsize=16)
+    axs[3].set_yticks([-25, 0, 25])
+    axs[3].set_ylim([-25, 25])
+    axs[3].set_xlabel(r"$t$", fontsize=16)
     plt.tight_layout()
     plt.show()
     return

@@ -6,10 +6,24 @@ app = marimo.App()
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md(r"""# Optimal advertising""")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(
         r"""
-        # Optimal advertising
-        """
+    ## Ad display
+
+    In this example we solve a simple optimal advertising problem in CVXPY.
+    We have $m$ advertisers/ads, $i=1, \ldots, m$, and $n$ time slots, $t=1, \ldots, n$.
+    $T_t$ is the total traffic in time slot $t$.
+    $D_{it} \geq 0$ is the number of ad $i$ displayed in period $t$.
+
+    Our constraints are that $\sum_i D_{it} \leq T_t$ and that we satisfy our contracts for minimum total displays: $\sum_t D_{it} \geq c_i$.
+    Our goal is to choose $D_{it}$.
+    """
     )
     return
 
@@ -18,16 +32,20 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        ## Ad display
+    ## Clicks and revenue
 
-        In this example we solve a simple optimal advertising problem in CVXPY.
-        We have $m$ advertisers/ads, $i=1, \ldots, m$, and $n$ time slots, $t=1, \ldots, n$.
-        $T_t$ is the total traffic in time slot $t$.
-        $D_{it} \geq 0$ is the number of ad $i$ displayed in period $t$.
+    $C_{it}$ is the number of clicks on ad $i$ in period $t$.
+    Our click model is $C_{it} = P_{it}D_{it}$, where $P_{it} \in [0,1]$ is the fraction of displays of ad $i$ in time $t$ that translate into clicks.
 
-        Our constraints are that $\sum_i D_{it} \leq T_t$ and that we satisfy our contracts for minimum total displays: $\sum_t D_{it} \geq c_i$.
-        Our goal is to choose $D_{it}$.
-        """
+    We are paid $R_i>0$ per click for ad $i$, up to a budget $B_i$.
+    Our total ad revenue is thus
+
+    $$
+    S_i = \min \left\{ R_i \sum_t C_{it}, B_i\right\},
+    $$
+
+    a concave function of $D$.
+    """
     )
     return
 
@@ -36,20 +54,18 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        ## Clicks and revenue
+    ## Ad optimization
+    We choose the displays to maximize revenue, i.e., we solve the optimization problem
 
-        $C_{it}$ is the number of clicks on ad $i$ in period $t$.
-        Our click model is $C_{it} = P_{it}D_{it}$, where $P_{it} \in [0,1]$ is the fraction of displays of ad $i$ in time $t$ that translate into clicks.
+    $$
+    \begin{array}{ll} \text{maximize} & \sum_i S_i \\
+    \text{subject to} & D \geq 0, \quad D^T{\bf 1} \leq T, \quad
+    D {\bf 1} \geq c
+    \end{array}
+    $$
 
-        We are paid $R_i>0$ per click for ad $i$, up to a budget $B_i$.
-        Our total ad revenue is thus
-
-        $$
-        S_i = \min \left\{ R_i \sum_t C_{it}, B_i\right\},
-        $$
-
-        a concave function of $D$.
-        """
+    where the optimization variable is $D\in {\bf R}^{m \times n}$ and $T \in {\bf R}^n$, $c \in {\bf R}^m$, $R \in {\bf R}^m$, $B \in {\bf R}^m$, and $P \in {\bf R}^{m \times n}$ are problem data.
+    """
     )
     return
 
@@ -58,30 +74,10 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-        ## Ad optimization
-        We choose the displays to maximize revenue, i.e., we solve the optimization problem
+    ## Example
 
-        $$
-        \begin{array}{ll} \text{maximize} & \sum_i S_i \\
-        \text{subject to} & D \geq 0, \quad D^T{\bf 1} \leq T, \quad
-        D {\bf 1} \geq c
-        \end{array}
-        $$
-
-        where the optimization variable is $D\in {\bf R}^{m \times n}$ and $T \in {\bf R}^n$, $c \in {\bf R}^m$, $R \in {\bf R}^m$, $B \in {\bf R}^m$, and $P \in {\bf R}^{m \times n}$ are problem data.
-        """
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-        ## Example
-
-        In the following code we generate and solve an ad optimization problem with 24 hourly periods and 5 ads (A-E).
-        """
+    In the following code we generate and solve an ad optimization problem with 24 hourly periods and 5 ads (A-E).
+    """
     )
     return
 
@@ -95,31 +91,31 @@ def _():
     m = 5
     n = 24
     SCALE = 10000
-    B = np.random.lognormal(mean=8, size=(m, 1)) + 10000
+    B = np.random.lognormal(mean=8, size=m) + 10000
     B = 1000 * np.round(B / 1000)
 
-    P_ad = np.random.uniform(size=(m, 1))
-    P_time = np.random.uniform(size=(1, n))
-    P = P_ad.dot(P_time)
+    P_ad = np.random.uniform(size=m)
+    P_time = np.random.uniform(size=n)
+    P = np.outer(P_ad, P_time)
 
-    T = np.sin(np.linspace(-2 * np.pi / 2, 2 * np.pi - 2 * np.pi / 2, n)) * SCALE
+    T = np.sin(np.linspace(-np.pi, np.pi, n)) * SCALE
     T += -np.min(T) + SCALE
-    c = np.random.uniform(size=(m,))
+    c = np.random.uniform(size=m)
     c *= 0.6 * T.sum() / c.sum()
     c = 1000 * np.round(c / 1000)
-    R = np.array([np.random.lognormal(c.min() / c[i]) for i in range(m)])
+    R = np.random.lognormal(c.min() / c)
     return B, P, R, T, c, m, n, np
 
 
 @app.cell
-def _(B, P, R, T, c, m, n, np):
+def _(B, P, R, T, c, m, n):
     # Form and solve the optimal advertising problem.
     import cvxpy as cp
 
     D = cp.Variable((m, n))
-    Si = [cp.minimum(R[i] * P[i, :] @ D[i, :].T, B[i]) for i in range(m)]
+    S = cp.minimum(cp.multiply(R, cp.sum(cp.multiply(P, D), axis=1)), B)
     prob = cp.Problem(
-        cp.Maximize(cp.sum(Si)), [D >= 0, D.T @ np.ones(m) <= T, D @ np.ones(n) >= c]
+        cp.Maximize(cp.sum(S)), [D >= 0, cp.sum(D, axis=0) <= T, cp.sum(D, axis=1) >= c]
     )
     prob.solve()
     return (D,)
@@ -127,11 +123,7 @@ def _(B, P, R, T, c, m, n, np):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        We plot the total traffic $T$ below.
-        """
-    )
+    mo.md(r"""We plot the total traffic $T$ below.""")
     return
 
 
@@ -140,8 +132,6 @@ def _(T):
     # Plot traffic.
     import matplotlib.pyplot as plt
 
-    # magic command not supported in marimo; please file an issue to add support
-    # %config InlineBackend.figure_format = 'svg'
     plt.plot(T)
     plt.xlabel("Hour")
     plt.ylabel("Traffic")
@@ -151,21 +141,16 @@ def _(T):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        We plot the conversion fractions $P$ below.
-        """
-    )
+    mo.md(r"""We plot the conversion fractions $P$ below.""")
     return
 
 
 @app.cell
-def _(D, P, np, plt):
-    _column_labels = range(0, 24)
+def _(P, n, np, plt):
+    _column_labels = range(n)
     _row_labels = list('ABCDE')
     _fig, _ax = plt.subplots()
-    _data = D.value
-    _heatmap = _ax.pcolor(P, cmap=plt.cm.Blues)
+    _ax.pcolor(P, cmap=plt.cm.Blues)
     _ax.set_xticks(np.arange(P.shape[1]) + 0.5, minor=False)
     _ax.set_yticks(np.arange(P.shape[0]) + 0.5, minor=False)
     _ax.invert_yaxis()
@@ -178,21 +163,17 @@ def _(D, P, np, plt):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        We plot the optimal displays $D$ below.
-        """
-    )
+    mo.md(r"""We plot the optimal displays $D$ below.""")
     return
 
 
 @app.cell
-def _(D, np, plt):
-    _column_labels = range(0, 24)
+def _(D, n, np, plt):
+    _column_labels = range(n)
     _row_labels = list('ABCDE')
     _fig, _ax = plt.subplots()
     _data = D.value
-    _heatmap = _ax.pcolor(_data, cmap=plt.cm.Blues)
+    _ax.pcolor(_data, cmap=plt.cm.Blues)
     _ax.set_xticks(np.arange(_data.shape[1]) + 0.5, minor=False)
     _ax.set_yticks(np.arange(_data.shape[0]) + 0.5, minor=False)
     _ax.invert_yaxis()

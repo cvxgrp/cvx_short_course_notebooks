@@ -130,38 +130,39 @@ def _():
     x0 = np.random.randn(m)
     x = np.zeros(TOTAL_LEN)
     x[:m] = x0
-    for _i in range(m + 1, TOTAL_LEN):
+    for _i in range(m, TOTAL_LEN):
         x[_i] = 1.8 * x[_i - 1] - 0.82 * x[_i - 2] + np.random.normal()
     x = np.exp(0.05 * x + 0.05 * np.random.normal(size=TOTAL_LEN))
-    return SKIP_LEN, TEST_LEN, TOTAL_LEN, TRAIN_LEN, m, np, x, x0
+
+    # Row j of X_lag holds the m + 1 values preceding y[j] = x[SKIP_LEN + j].
+    X_lag = np.lib.stride_tricks.sliding_window_view(x[:-1], m + 1)[SKIP_LEN - m - 1:]
+    y = x[SKIP_LEN:]
+    return SKIP_LEN, TEST_LEN, TOTAL_LEN, TRAIN_LEN, X_lag, m, np, x, y
 
 
 @app.cell
-def _(SKIP_LEN, TRAIN_LEN, m, x):
+def _(TRAIN_LEN, X_lag, m, y):
     import cvxpy as cp
+
     w = cp.Variable(m + 1)
     v = cp.Variable()
     tau = cp.Parameter()
-    error = 0
-    for _i in range(SKIP_LEN, TRAIN_LEN + SKIP_LEN):
-        r = x[_i] - (w.T @ x[_i - m - 1:_i] + v)
-        error = error + (0.5 * cp.abs(r) + (tau - 0.5) * r)
+    r = y[:TRAIN_LEN] - (X_lag[:TRAIN_LEN] @ w + v)
+    error = cp.sum(0.5 * cp.abs(r) + (tau - 0.5) * r)
     prob = cp.Problem(cp.Minimize(error))
     return prob, tau, v, w
 
 
 @app.cell
-def _(SKIP_LEN, TOTAL_LEN, m, np, prob, tau, v, w, x, x0):
+def _(SKIP_LEN, TOTAL_LEN, X_lag, np, prob, tau, v, w, y):
     tau_vals = [0.9, 0.5, 0.1]
     pred = np.zeros((len(tau_vals), TOTAL_LEN))
     r_vals = np.zeros((len(tau_vals), TOTAL_LEN))
     for _k, _tau_val in enumerate(tau_vals):
         tau.value = _tau_val
         prob.solve()
-        pred[_k, :m] = x0
-        for _i in range(SKIP_LEN, TOTAL_LEN):
-            pred[_k, _i] = (x[_i - m - 1:_i].T @ w + v).value
-            r_vals[_k, _i] = (x[_i] - (x[_i - m - 1:_i].T @ w + v)).value
+        pred[_k, SKIP_LEN:] = X_lag @ w.value + v.value
+        r_vals[_k, SKIP_LEN:] = y - pred[_k, SKIP_LEN:]
     return pred, r_vals, tau_vals
 
 
@@ -178,21 +179,22 @@ def _(mo):
 @app.cell
 def _(SKIP_LEN, TEST_LEN, TRAIN_LEN, pred, tau_vals, x):
     import matplotlib.pyplot as plt
-    plt.plot(range(0, TRAIN_LEN + TEST_LEN), x[SKIP_LEN:], 'black', label='$x$')
+
+    plt.plot(range(TRAIN_LEN + TEST_LEN), x[SKIP_LEN:], 'black', label='$x$')
     plt.xlabel('$t$', fontsize=16)
     plt.ylabel('$x_t$', fontsize=16)
     plt.title('Full time series')
     plt.show()
-    plt.plot(range(0, TRAIN_LEN), x[SKIP_LEN:-TEST_LEN], 'black', label='$x$')
+    plt.plot(range(TRAIN_LEN), x[SKIP_LEN:-TEST_LEN], 'black', label='$x$')
     colors = ['r', 'g', 'b']
     for _k, _tau_val in enumerate(tau_vals):
-        plt.plot(range(0, TRAIN_LEN), pred[_k, SKIP_LEN:-TEST_LEN], colors[_k], label='$\\tau = %.1f$' % _tau_val)
+        plt.plot(range(TRAIN_LEN), pred[_k, SKIP_LEN:-TEST_LEN], colors[_k], label=rf'$\tau = {_tau_val:.1f}$')
     plt.xlabel('$t$', fontsize=16)
     plt.title('Training data')
     plt.show()
     plt.plot(range(TRAIN_LEN, TRAIN_LEN + TEST_LEN), x[-TEST_LEN:], 'black', label='$x$')
     for _k, _tau_val in enumerate(tau_vals):
-        plt.plot(range(TRAIN_LEN, TRAIN_LEN + TEST_LEN), pred[_k, -TEST_LEN:], colors[_k], label='$\\tau = %.1f$' % _tau_val)
+        plt.plot(range(TRAIN_LEN, TRAIN_LEN + TEST_LEN), pred[_k, -TEST_LEN:], colors[_k], label=rf'$\tau = {_tau_val:.1f}$')
     plt.xlabel('$t$', fontsize=16)
     plt.title('Test data')
     plt.show()
@@ -213,24 +215,22 @@ def _(mo):
 @app.cell
 def _(SKIP_LEN, TEST_LEN, TRAIN_LEN, colors, np, plt, r_vals, tau_vals):
     for _k, _tau_val in enumerate(tau_vals):
-        sorted = np.sort(r_vals[_k, SKIP_LEN:SKIP_LEN + TRAIN_LEN])
-        yvals = np.arange(len(sorted)) / float(len(sorted))
-        plt.plot(sorted, yvals, colors[_k], label='$\\tau = %.1f$' % _tau_val)
-    x_1 = np.linspace(-1.0, 1, 100)
-    for val in [0.1, 0.5, 0.9]:
-        plt.plot(x_1, len(x_1) * [val], 'k--')
+        _r_sorted = np.sort(r_vals[_k, SKIP_LEN:SKIP_LEN + TRAIN_LEN])
+        _cdf = np.arange(len(_r_sorted)) / len(_r_sorted)
+        plt.plot(_r_sorted, _cdf, colors[_k], label=rf'$\tau = {_tau_val:.1f}$')
+    for _val in [0.1, 0.5, 0.9]:
+        plt.axhline(_val, color='k', linestyle='--')
     plt.xlabel('Residual')
     plt.ylabel('Cumulative density in training')
     plt.xlim([-0.6, 0.6])
     plt.legend(loc='upper left')
     plt.show()
     for _k, _tau_val in enumerate(tau_vals):
-        sorted = np.sort(r_vals[_k, -TEST_LEN:])
-        yvals = np.arange(len(sorted)) / float(len(sorted))
-        plt.plot(sorted, yvals, colors[_k], label='$\\tau = %.1f$' % _tau_val)
-    x_1 = np.linspace(-1, 1, 100)
-    for val in [0.1, 0.5, 0.9]:
-        plt.plot(x_1, len(x_1) * [val], 'k--')
+        _r_sorted = np.sort(r_vals[_k, -TEST_LEN:])
+        _cdf = np.arange(len(_r_sorted)) / len(_r_sorted)
+        plt.plot(_r_sorted, _cdf, colors[_k], label=rf'$\tau = {_tau_val:.1f}$')
+    for _val in [0.1, 0.5, 0.9]:
+        plt.axhline(_val, color='k', linestyle='--')
     plt.xlabel('Residual')
     plt.ylabel('Cumulative density in testing')
     plt.xlim([-0.6, 0.6])

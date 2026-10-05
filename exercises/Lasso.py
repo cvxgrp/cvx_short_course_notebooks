@@ -105,24 +105,22 @@ def _(mo):
 def _():
     # Ridge regression vs. LASSO to estimate sparse x.
     import numpy as np
-    import scipy.linalg as la
-    import scipy.sparse as sp
     import cvxpy as cp
 
     np.random.seed(1)
 
     n = 400
     m = 200
-    true_x = 100 * sp.rand(n, 1, 0.1).toarray().flatten()
+    true_x = np.zeros(n)
+    true_x[np.random.choice(n, n // 10, replace=False)] = 100 * np.random.rand(n // 10)
     A = np.random.randn(m, n)
     sigma = 1.0
     v = np.random.normal(0, sigma, m)
     y = A @ true_x + v
 
-
     x = cp.Variable(n)
     gamma = None  # set me! Initialize to 1.
-    return cp, la, n, np, true_x, x
+    return cp, n, np, true_x, x
 
 
 @app.cell
@@ -138,7 +136,7 @@ def _(cp, n, np, true_x, x):
     x_lasso = x.value
 
     import matplotlib.pyplot as plt
-    # '%matplotlib inline' command supported automatically in marimo
+
     plt.semilogy(range(n), np.sort(np.abs(true_x - x_ridge)),  label="ridge errors")
     plt.semilogy(range(n), np.sort(np.abs(true_x - x_lasso)),  label="lasso errors")
     plt.legend()
@@ -162,28 +160,28 @@ def _(np):
     num_gamma = 30
     gamma_values = np.logspace(-4, 2, num_gamma)
 
-    tic = time.time()
+    tic = time.perf_counter()
     xs_loop = [get_x(val) for val in gamma_values]
-    toc = time.time()
+    toc = time.perf_counter()
     t_loop = toc - tic
 
-    tic = time.time()
+    tic = time.perf_counter()
     dasklist = [dask.delayed(get_x)(val) for val in gamma_values]
     xs_dask = dask.compute(*dasklist, scheduler='processes')
-    toc = time.time()
+    toc = time.perf_counter()
     t_dask = toc - tic
-    return num_gamma, t_dask, t_loop, xs_dask, xs_loop
+    return t_dask, t_loop, xs_dask, xs_loop
 
 
 @app.cell
-def _(la, num_gamma, plt, t_dask, t_loop, true_x, xs_dask, xs_loop):
+def _(np, plt, t_dask, t_loop, true_x, xs_dask, xs_loop):
     print(f'Time using a native loop \n\t{t_loop}')
     print(f'Time to solve using Dask parallelism \n\t{t_dask}')
 
-    sol_diffs = [la.norm(xs_loop[i] - xs_dask[i]) for i in range(num_gamma)]
-    print(f'Maximum discrepency between computed solutions \n\t{max(sol_diffs)}')
+    sol_diffs = np.linalg.norm(np.array(xs_loop) - np.array(xs_dask), axis=1)
+    print(f'Maximum discrepancy between computed solutions \n\t{sol_diffs.max()}')
 
-    sol_errors = [la.norm(xs_loop[i] - true_x) for i in range(num_gamma)]
+    sol_errors = np.linalg.norm(np.array(xs_loop) - true_x, axis=1)
     plt.plot(sol_errors)
     plt.show()
     return

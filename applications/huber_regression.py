@@ -22,8 +22,7 @@ def _(mo):
         r"""
     In this example we do Huber regression in CVXPY.
     We start by discussing standard regression.
-    In a regression problem we are given data $(x_i,y_i)\in {\bf R}^n \times {\bf R}$, $i=1,\ldots, m$.
-    and fit a linear (affine) model
+    In a regression problem we are given data $(x_i,y_i)\in {\bf R}^n \times {\bf R}$, $i=1,\ldots, m$, and fit a linear (affine) model
 
     $$\hat y_i = \beta ^Tx_i - v,$$
 
@@ -102,28 +101,29 @@ def _(mo):
 @app.cell
 def _():
     import numpy as np
+
     np.random.seed(1)
     n = 300
     SAMPLES = int(1.5 * n)
-    beta_true = 5 * np.random.normal(size=(n, 1))
+    beta_true = 5 * np.random.normal(size=n)
     X = np.random.randn(n, SAMPLES)
-    _Y = np.zeros((SAMPLES, 1))
-    v = np.random.normal(size=(SAMPLES, 1))
+    v = np.random.normal(size=SAMPLES)
     return SAMPLES, X, beta_true, n, np, v
 
 
 @app.cell
 def _(SAMPLES, X, beta_true, n, np, v):
     import cvxpy as cp
+
     TESTS = 50
     lsq_data = np.zeros(TESTS)
     huber_data = np.zeros(TESTS)
     prescient_data = np.zeros(TESTS)
     p_vals = np.linspace(0, 0.15, num=TESTS)
     for idx, p in enumerate(p_vals):
-        factor = 2 * np.random.binomial(1, 1 - p, size=(SAMPLES, 1)) - 1
-        _Y = factor * X.T.dot(beta_true) + v
-        beta = cp.Variable((n, 1))
+        factor = 2 * np.random.binomial(1, 1 - p, size=SAMPLES) - 1
+        _Y = factor * (X.T @ beta_true) + v
+        beta = cp.Variable(n)
         fit = cp.norm(beta - beta_true) / cp.norm(beta_true)
         cost = cp.norm(X.T @ beta - _Y)
         prob = cp.Problem(cp.Minimize(cost))
@@ -143,9 +143,6 @@ def _(huber_data, lsq_data, p_vals, prescient_data):
     # Plot the relative reconstruction error for
     # least-squares, prescient, and Huber regression.
     import matplotlib.pyplot as plt
-
-    # magic command not supported in marimo; please file an issue to add support
-    # %config InlineBackend.figure_format = 'svg'
 
     plt.plot(p_vals, lsq_data, label="Least squares")
     plt.plot(p_vals, huber_data, label="Huber")

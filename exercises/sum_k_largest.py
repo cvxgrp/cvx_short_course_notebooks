@@ -51,7 +51,6 @@ def _():
 def _(cp):
     import numpy as np
     import scipy.linalg as la
-    import scipy.sparse as sp
     import time
 
     def make_problem_data(n, m, true_k):
@@ -67,9 +66,9 @@ def _(cp):
 
     def make_and_solve(loss, x, A, y):
         prob = cp.Problem(cp.Minimize(loss), [A @ x == y])
-        tic = time.time()
+        tic = time.perf_counter()
         prob.solve(solver='CLARABEL')
-        toc = time.time()
+        toc = time.perf_counter()
         t = toc - tic
         x_est = x.value
         return prob, x_est, t
@@ -98,14 +97,13 @@ def _(A, cp, gamma, k, la, make_and_solve, sum_abs_largest, x, y):
     print(f'Solve time (cvxpy atom)\n\t{t2}')
 
     disc = la.norm(x1 - x2) / min(la.norm(x1), la.norm(x2))
-    print(f'Discrepency between two solutions\n\t{disc}')
+    print(f'Discrepancy between two solutions\n\t{disc}')
     return prob1, prob2
 
 
 @app.cell
 def _(prob1, prob2):
     import matplotlib.pyplot as plt
-    # '%matplotlib inline' command supported automatically in marimo
 
     A1 = prob1.get_problem_data(solver='SCS')[0]['A']
     plt.spy(A1, aspect='auto')

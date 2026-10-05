@@ -54,9 +54,9 @@ def _():
     mu[0] = 0
     S = np.random.randn(n, n)
     S = S.T @ S
-    Sigma = S / max(np.abs(np.diag(S))) * 0.2
-    Sigma[:, 0] = np.zeros(n)
-    Sigma[0, :] = np.zeros(n)
+    Sigma = S / np.max(np.diag(S)) * 0.2
+    Sigma[:, 0] = 0
+    Sigma[0, :] = 0
     w_unif = np.ones(n) / n
     return Sigma, n, np, w_unif
 
@@ -65,7 +65,7 @@ def _():
 def _(Sigma, n, np, risk, w_unif):
     import cvxpy as cp
     _w = cp.Variable(n)
-    print(f'Risk for uniform: {np.sqrt(w_unif.T @ Sigma @ w_unif):.1%}')
+    print(f'Risk for uniform: {np.sqrt(w_unif @ Sigma @ w_unif):.1%}')
     print(f'Risk for unconstrained: {np.sqrt(risk.value):.1%}')
     print(f'Risk for long only: {np.sqrt(risk.value):.1%}')
     print(f'Risk for limit on short: {np.sqrt(risk.value):.1%}')

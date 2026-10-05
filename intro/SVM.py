@@ -60,19 +60,16 @@ def _():
     m = 1000
     TEST = m
     DENSITY = 0.2
-    beta_true = np.random.randn(n, 1)
-    idxs = np.random.choice(range(n), int((1 - DENSITY) * n), replace=False)
-    for idx in idxs:
-        beta_true[idx] = 0
+    beta_true = np.random.randn(n)
+    idxs = np.random.choice(n, int((1 - DENSITY) * n), replace=False)
+    beta_true[idxs] = 0
     offset = 0
     sigma = 45
     X = np.random.normal(0, 5, size=(m, n))
-    Y = np.sign(X.dot(beta_true) + offset + np.random.normal(0, sigma, size=(m, 1)))
+    Y = np.sign(X @ beta_true + offset + np.random.normal(0, sigma, size=m))
     X_test = np.random.normal(0, 5, size=(TEST, n))
-    Y_test = np.sign(
-        X_test.dot(beta_true) + offset + np.random.normal(0, sigma, size=(TEST, 1))
-    )
-    return TEST, X, X_test, Y, beta_true, m, n, np, offset
+    Y_test = np.sign(X_test @ beta_true + offset + np.random.normal(0, sigma, size=TEST))
+    return X, X_test, Y, beta_true, m, n, np, offset
 
 
 @app.cell(hide_code=True)
@@ -90,7 +87,7 @@ def _(X, Y, m, n):
     # Form SVM with L1 regularization problem.
     import cvxpy as cp
 
-    beta = cp.Variable((n, 1))
+    beta = cp.Variable(n)
     v = cp.Variable()
     loss = cp.sum(cp.pos(1 - cp.multiply(Y, X @ beta - v)))
     reg = cp.norm(beta, 1)
@@ -112,18 +109,19 @@ def _(mo):
 
 
 @app.cell
-def _(TEST, X, X_test, beta, beta_true, lambd, m, np, offset, prob, v):
+def _(X, X_test, beta, beta_true, lambd, np, offset, prob, v):
     TRIALS = 100
     train_error = np.zeros(TRIALS)
     test_error = np.zeros(TRIALS)
     lambda_vals = np.logspace(-2, 0, TRIALS)
     beta_vals = []
-    for _i in range(TRIALS):
-        lambd.value = lambda_vals[_i]
+    for _i, _lambda_val in enumerate(lambda_vals):
+        lambd.value = _lambda_val
         prob.solve()
-        train_error[_i] = (np.sign(X.dot(beta_true) + offset) != np.sign(X.dot(beta.value) - v.value)).sum() / m
-        test_error[_i] = (np.sign(X_test.dot(beta_true) + offset) != np.sign(X_test.dot(beta.value) - v.value)).sum() / TEST
+        train_error[_i] = np.mean(np.sign(X @ beta_true + offset) != np.sign(X @ beta.value - v.value))
+        test_error[_i] = np.mean(np.sign(X_test @ beta_true + offset) != np.sign(X_test @ beta.value - v.value))
         beta_vals.append(beta.value)
+    beta_vals = np.array(beta_vals)
     return beta_vals, lambda_vals, test_error, train_error
 
 
@@ -131,9 +129,6 @@ def _(TEST, X, X_test, beta, beta_true, lambd, m, np, offset, prob, v):
 def _(lambda_vals, test_error, train_error):
     # Plot the train and test error over the trade-off curve.
     import matplotlib.pyplot as plt
-
-    # magic command not supported in marimo; please file an issue to add support
-    # %config InlineBackend.figure_format = 'svg'
 
     plt.plot(lambda_vals, train_error, label="Train error")
     plt.plot(lambda_vals, test_error, label="Test error")
@@ -156,9 +151,8 @@ def _(mo):
 
 
 @app.cell
-def _(beta_vals, lambda_vals, n, plt):
-    for _i in range(n):
-        plt.plot(lambda_vals, [wi[_i, 0] for wi in beta_vals])
+def _(beta_vals, lambda_vals, plt):
+    plt.plot(lambda_vals, beta_vals)
     plt.xlabel('$\\lambda$', fontsize=16)
     plt.xscale('log')
     return
