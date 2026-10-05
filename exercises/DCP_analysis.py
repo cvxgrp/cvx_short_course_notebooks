@@ -1,18 +1,22 @@
 import marimo
 
-__generated_with = "0.13.4"
+__generated_with = "0.24.2"
 app = marimo.App()
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""# DCP analysis""")
+    mo.md(r"""
+    # DCP analysis
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""In this exercise, you will fix optimization problems that break the DCP rules by identifying the DCP error and then rewriting the problem.""")
+    mo.md(r"""
+    In this exercise, you will fix optimization problems that break the DCP rules by identifying the DCP error and then rewriting the problem.
+    """)
     return
 
 
@@ -20,18 +24,23 @@ def _(mo):
 def _():
     import cvxpy as cp
     import numpy as np
+
     return cp, np
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Problem 1.
 
-    $\min\{  \sqrt{x^2 + 1 } : x \in \mathbf{R} \}$
-    """
-    )
+    $$
+    \begin{array}{ll}
+    \text{minimize} & \sqrt{x^2 + 1},
+    \end{array}
+    $$
+
+    with variable $x \in \mathbf{R}$.
+    """)
     return
 
 
@@ -46,13 +55,19 @@ def _(cp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Problem 2.
 
-    $\min\{x + 2 \,:\, 5 = 2 / x,~~  x > 0 \}$
-    """
-    )
+    $$
+    \begin{array}{ll}
+    \text{minimize} & x + 2 \\
+    \text{subject to} & 5 = 2 / x \\
+    & x > 0,
+    \end{array}
+    $$
+
+    with variable $x \in \mathbf{R}$.
+    """)
     return
 
 
@@ -66,12 +81,18 @@ def _(cp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Problem 3.
-    $\min\{ x + 2 \,:\, 5 \leq 2 / x^2,~~ x \in \mathbf{R} \}$
-    """
-    )
+
+    $$
+    \begin{array}{ll}
+    \text{minimize} & x + 2 \\
+    \text{subject to} & 5 \leq 2 / x^2,
+    \end{array}
+    $$
+
+    with variable $x \in \mathbf{R}$.
+    """)
     return
 
 
@@ -85,12 +106,20 @@ def _(cp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Problem 4.
-    $\min\{ 1/ x \,:\, 0 \leq x^2 / y, ~~ y \geq 1, ~~ x > 0 \}$
-    """
-    )
+
+    $$
+    \begin{array}{ll}
+    \text{minimize} & 1 / x \\
+    \text{subject to} & 0 \leq x^2 / y \\
+    & y \geq 1 \\
+    & x > 0,
+    \end{array}
+    $$
+
+    with variables $x, y \in \mathbf{R}$.
+    """)
     return
 
 
@@ -105,12 +134,18 @@ def _(cp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Problem 5.
-    $\min\{ x + 2 \,:\, \exp(2x) + \exp(3x) \leq \exp(5x)  \}$
-    """
-    )
+
+    $$
+    \begin{array}{ll}
+    \text{minimize} & x + 2 \\
+    \text{subject to} & \exp(2x) + \exp(3x) \leq \exp(5x),
+    \end{array}
+    $$
+
+    with variable $x \in \mathbf{R}$.
+    """)
     return
 
 
@@ -124,34 +159,43 @@ def _(cp):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Bonus Problem 1.
-    $\min\{ -(\max\{x, 4\} - 3)^2 \,:\, x \geq 1 \}$
-    """
-    )
+
+    $$
+    \begin{array}{ll}
+    \text{minimize} & (\max\{x, 4\} - 3)^2 \\
+    \text{subject to} & x \geq 1,
+    \end{array}
+    $$
+
+    with variable $x \in \mathbf{R}$.
+    """)
     return
 
 
 @app.cell
 def _(cp):
     _x = cp.Variable()
-    _prob = cp.Problem(cp.Maximize(-(cp.maximum(_x, 4) - 3) ** 2), [_x >= 1])
+    _prob = cp.Problem(cp.Minimize((cp.maximum(_x, 4) - 3) ** 2), [_x >= 1])
     _prob.solve()
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Bonus Problem 2.
 
-    $\min\left\{ \sum_{i=1}^m c_i \frac{x_i}{u_i - x_i} \,:\, ~  u > x,~~ x \in \mathbf{R}^m \right\}$
+    $$
+    \begin{array}{ll}
+    \text{minimize} & \sum_{i=1}^m c_i \dfrac{x_i}{u_i - x_i} \\
+    \text{subject to} & x \prec u,
+    \end{array}
+    $$
 
-    where $c$ and $u$ are nonnegative vectors.
-    """
-    )
+    with variable $x \in \mathbf{R}^m$, where $c, u \in \mathbf{R}^m_+$ are given.
+    """)
     return
 
 
@@ -173,6 +217,7 @@ def _(cp, np):
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
