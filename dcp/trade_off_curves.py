@@ -69,7 +69,7 @@ def _(gamma, gamma_vals, prob, x):
         return x.value
 
     dasklist = [dask.delayed(get_x)(val) for val in gamma_vals]
-    xs_dask = dask.compute(*dasklist, scheduler='processes')
+    xs_dask = dask.compute(*dasklist)
     return
 
 
