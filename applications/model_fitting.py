@@ -117,32 +117,30 @@ def _():
     TEST = 100
     sigma = 1.9
     DENSITY = 1.0
-    theta_true = np.random.randn(n, 1)
+    theta_true = np.random.randn(n)
     idxs = np.random.choice(range(n), int((1 - DENSITY) * n), replace=False)
     for _idx in idxs:
         theta_true[_idx] = 0
     Z = np.random.binomial(1, 0.5, size=(m, n))
-    Y = np.sign(Z.dot(theta_true) + np.random.normal(0, sigma, size=(m, 1)))
+    Y = np.sign(Z.dot(theta_true) + np.random.normal(0, sigma, size=m))
     X = pairs(Z)
     X = np.hstack([X, np.ones((m, 1))])
     Z_test = np.random.binomial(1, 0.5, size=(TEST, n))
-    Y_test = np.sign(Z_test.dot(theta_true) + np.random.normal(0, sigma, size=(TEST, 1)))
+    Y_test = np.sign(Z_test.dot(theta_true) + np.random.normal(0, sigma, size=TEST))
     X_test = pairs(Z_test)
     X_test = np.hstack([X_test, np.ones((TEST, 1))])
     return TEST, X, X_test, Y, Z, Z_test, k, m, n, np, theta_true
 
 
 @app.cell
-def _(X, Y, k, m, np):
+def _(X, Y, k, m):
     # Form model fitting problem with logistic loss and L1 regularization.
     import cvxpy as cp
 
 
-    theta = cp.Variable((k + 1, 1))
+    theta = cp.Variable(k + 1)
     lambd = cp.Parameter(nonneg=True)
-    loss = cp.sum(
-        cp.log_sum_exp(cp.hstack([np.zeros((m, 1)), -cp.multiply(Y, X @ theta)]), axis=1)
-    )
+    loss = cp.sum(cp.logistic(-cp.multiply(Y, X @ theta)))
     reg = cp.norm(theta[:k], 1)
     prob = cp.Problem(cp.Minimize(loss / m + lambd * reg))
     return cp, lambd, prob, theta
