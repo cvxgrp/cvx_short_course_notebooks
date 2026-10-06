@@ -1,119 +1,98 @@
 import marimo
 
-__generated_with = "0.25.0"
+__generated_with = "0.13.4"
 app = marimo.App()
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    # Logistic regression
-    """)
+    mo.md(
+        r"""
+        # Model fitting
+        """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    ## Binary classification
+    mo.md(
+        r"""
+        ## Data model
 
-    In this example we do logistic regression in CVXPY.
-    We are given data $(x_i, y_i)$, $i=1,\ldots,m$, where $x_i \in {\bf R}^n$ is a *feature vector*
-    and $y_i \in \{0,1\}$ is a (boolean) *label*.
-    Our goal is to construct a *classifier* that predicts the label $y$ of a new feature vector $x$.
-    """)
+        In this example we discuss model fitting and show an example with CVXPY.
+        We are given data $(x_i,y_i)\in \mathcal X \times \mathcal Y$, $i=1, \ldots, m$:
+        * For $\mathcal X= {\bf R}^n$, $x$ is a *feature vector*.
+        * For $\mathcal Y= {\bf R}$,  $y$ is a (real) *outcome* or *label*.
+        * For $\mathcal Y= \{-1,1\}$,  $y$ is a (boolean) outcome.
+
+        Our goal is to find a *model* or *predictor*
+        $\psi: \mathcal X \to \mathcal Y$ so that
+        $\psi(x)\approx y$ *for data $(x,y)$ that we haven't seen*:
+        * For $\mathcal Y ={\bf R}$, $\psi$ is a *regression model*.
+        * For $\mathcal Y =\{-1,1\}$, $\psi$ is a *classifier*.
+
+        We choose $\psi$ based on observed data and prior knowledge.
+        """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    ## Probabilistic model
+    mo.md(
+        r"""
+        ## Loss minimization model
 
-    We model each data point $(x_i, y_i)$ as an outcome of a random variable $(X, Y)$,
-    where $X$ takes values in ${\bf R}^n$ and $Y$ takes values in $\{0,1\}$.
-    We model the conditional distribution of the label given the features as
+        Let our data model be parametrized by $\theta\in {\bf R}^n$.
+        We define a *loss function*
+        $L: \mathcal X \times \mathcal Y \times {\bf R}^n \to {\bf R}$
+        where $L(x_i,y_i,\theta)$ is the loss (miss-fit) for the data point
+        $(x_i,y_i)$, using the model parameter $\theta$.
 
-    $$
-    \mathop{\bf Prob}(Y = 1 \mid X = x) = \sigma(\theta^T x), \qquad \sigma(u) = \frac{1}{1 + e^{-u}},
-    $$
-
-    where $\theta \in {\bf R}^n$ is the model parameter and $\sigma$ is the *logistic* (sigmoid) function.
-    Since the label is binary, $\mathop{\bf Prob}(Y = 0 \mid X = x) = 1 - \sigma(\theta^T x) = \sigma(-\theta^T x)$.
-
-    Given $\theta$, we predict $\hat y = 1$ if $\theta^T x \geq 0$, i.e., if the probability of
-    $Y = 1$ is at least $1/2$, and $\hat y = 0$ otherwise.
-    The decision boundary is the hyperplane $\theta^T x = 0$.
-    An intercept term is obtained by appending a constant feature $1$ to $x$.
-    """)
+        We choose $\theta$ to minimize the total loss $\sum_i L(x_i,y_i,\theta)$. Our model is then $\psi(x) = {\rm argmin}_y L(x,y,\theta)$.
+        """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    ## Maximum likelihood estimation
+    mo.md(
+        r"""
+        ## Model fitting via regularized loss minimization
 
-    Assuming the data points are independent, the likelihood of $\theta$ is
+        An important concept in model fitting is *regularization* functions $r:{\bf R}^n \to {\bf R} \cup \{\infty\}$.
+        The function $r(\theta)$ measures model complexity, enforces
+        constraints, or represents a prior.
 
-    $$
-    \prod_{i=1}^m \sigma(\theta^T x_i)^{y_i} \left(1 - \sigma(\theta^T x_i)\right)^{1 - y_i}.
-    $$
+        With regularization, we choose $\theta$ by minimizing the *regularized loss*
 
-    Using $\log \sigma(u) = u - \log(1 + e^u)$ and $\log(1 - \sigma(u)) = -\log(1 + e^u)$,
-    the negative log-likelihood simplifies to
+        $$(1/m) \sum_i L(x_i,y_i,\theta)  + r(\theta).$$
 
-    $$
-    \ell(\theta) = \sum_{i=1}^m \left( \log\left(1 + \exp(\theta^T x_i)\right) - y_i \theta^T x_i \right).
-    $$
-
-    Maximum likelihood estimation therefore boils down to the optimization problem
-
-    $$
-    \begin{array}{ll}
-    \text{minimize} & \sum_{i=1}^m \log\left(1 + \exp(\theta^T x_i)\right) - y_i \theta^T x_i,
-    \end{array}
-    $$
-
-    with variable $\theta$. Each term is a log-sum-exp of $(0, \theta^T x_i)$ minus an affine function of $\theta$,
-    so the problem is convex.
-    """)
+        For many useful cases, this is a convex problem.
+        Our model again is $\psi(x) = {\rm argmin}_y L(x,y,\theta)$.
+        """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    ## Regularization
+    mo.md(
+        r"""
+        ## Example
 
-    A standard variant is to add a regularizer and solve
+        In the following code we do an example of model fitting with CVXPY.
+        We are given (boolean) features $z\in \{0,1\}^{10}$ and (boolean) outcomes $y\in \{-1,1\}$.
+        We generate a new feature vector $x \in \{0,1\}^{55}$ which contains all products $z_iz_j$
+        (co-occurence of pairs of original features).
 
-    $$
-    \begin{array}{ll}
-    \text{minimize} & (1/m) \ell(\theta) + \lambda \|\theta\|_1,
-    \end{array}
-    $$
-
-    where $\lambda \geq 0$ is a parameter.
-    The $\ell_1$ term encourages a sparse $\theta$, i.e., it selects features.
-    Increasing $\lambda$ trades off fit to the training data for sparsity.
-    The problem is still convex.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Example
-
-    In the following code we generate data from the model itself.
-    We draw features $x_i \sim \mathcal N(0, I)$ in ${\bf R}^{200}$ and append a constant feature $1$ for the intercept.
-    We choose a sparse $\theta^\mathrm{true}$ with $5$ nonzero entries and draw the labels as
-    $y_i \sim \mathrm{Bernoulli}(\sigma((\theta^\mathrm{true})^T x_i))$.
-    We fit $\ell_1$-regularized logistic regression, without regularizing the intercept.
-    We train on $m=200$ examples and test on $1000$ examples, and plot the train and test error as we vary $\lambda$.
-    """)
+        To fit our model, we use logistic loss, or $L(x,y,\theta) = \log (1+ \exp(-y\theta^T x))$, and an $\ell_1$ regularizer $r(\theta) = \|\theta\|_1$.
+        We train on $m=200$ examples and test on $100$ examples.
+        We plot the train and test error as we vary $\lambda$.
+        """
+    )
     return
 
 
@@ -121,55 +100,65 @@ def _(mo):
 def _():
     import numpy as np
 
+    def pairs(Z):
+        m, n = Z.shape
+        k = n * (n + 1) // 2
+        X = np.zeros((m, k))
+        count = 0
+        for _i in range(n):
+            for j in range(_i, n):
+                X[:, count] = Z[:, _i] * Z[:, j]
+                count += 1
+        return X
     np.random.seed(1)
-    n = 200
+    n = 10
+    k = n * (n + 1) // 2
     m = 200
-    TEST = 1000
-    NONZEROS = 5
-    theta_true = np.zeros(n)
-    theta_true[np.random.choice(n, NONZEROS, replace=False)] = 5 * np.random.randn(NONZEROS)
-
-    def sigmoid(u):
-        return 1 / (1 + np.exp(-u))
-
-    def make_data(num):
-        X = np.random.randn(num, n)
-        Y = (np.random.rand(num) < sigmoid(X @ theta_true)).astype(float)
-        X = np.hstack([X, np.ones((num, 1))])  # constant feature for the intercept
-        return X, Y
-
-    X, Y = make_data(m)
-    X_test, Y_test = make_data(TEST)
-    return X, X_test, Y, Y_test, m, n, np
+    TEST = 100
+    sigma = 1.9
+    DENSITY = 1.0
+    theta_true = np.random.randn(n, 1)
+    idxs = np.random.choice(range(n), int((1 - DENSITY) * n), replace=False)
+    for _idx in idxs:
+        theta_true[_idx] = 0
+    Z = np.random.binomial(1, 0.5, size=(m, n))
+    Y = np.sign(Z.dot(theta_true) + np.random.normal(0, sigma, size=(m, 1)))
+    X = pairs(Z)
+    X = np.hstack([X, np.ones((m, 1))])
+    Z_test = np.random.binomial(1, 0.5, size=(TEST, n))
+    Y_test = np.sign(Z_test.dot(theta_true) + np.random.normal(0, sigma, size=(TEST, 1)))
+    X_test = pairs(Z_test)
+    X_test = np.hstack([X_test, np.ones((TEST, 1))])
+    return TEST, X, X_test, Y, Z, Z_test, k, m, n, np, theta_true
 
 
 @app.cell
-def _(X, Y, m, n):
-    # Form the l1-regularized logistic regression problem.
+def _(X, Y, k, m, np):
+    # Form model fitting problem with logistic loss and L1 regularization.
     import cvxpy as cp
 
-    theta = cp.Variable(n + 1)
+
+    theta = cp.Variable((k + 1, 1))
     lambd = cp.Parameter(nonneg=True)
-    loss = cp.sum(cp.logistic(X @ theta)) - Y @ (X @ theta)
-    reg = cp.norm1(theta[:n])  # don't regularize the intercept
+    loss = cp.sum(
+        cp.log_sum_exp(cp.hstack([np.zeros((m, 1)), -cp.multiply(Y, X @ theta)]), axis=1)
+    )
+    reg = cp.norm(theta[:k], 1)
     prob = cp.Problem(cp.Minimize(loss / m + lambd * reg))
-    return lambd, prob, theta
+    return cp, lambd, prob, theta
 
 
 @app.cell
-def _(X, X_test, Y, Y_test, lambd, np, prob, theta):
-    def error(X, Y, theta):
-        return np.mean((X @ theta > 0) != (Y == 1))
-
-    TRIALS = 30
-    lambda_vals = np.logspace(-3, 0, TRIALS)
+def _(TEST, X, X_test, Z, Z_test, cp, lambd, m, np, prob, theta, theta_true):
+    TRIALS = 100
     train_error = np.zeros(TRIALS)
     test_error = np.zeros(TRIALS)
-    for _i, _val in enumerate(lambda_vals):
-        lambd.value = _val
-        prob.solve()
-        train_error[_i] = error(X, Y, theta.value)
-        test_error[_i] = error(X_test, Y_test, theta.value)
+    lambda_vals = np.logspace(-4, 0, TRIALS)
+    for _i in range(TRIALS):
+        lambd.value = lambda_vals[_i]
+        prob.solve(solver=cp.SCS)
+        train_error[_i] = (np.sign(Z.dot(theta_true)) != np.sign(X.dot(theta.value))).sum() / m
+        test_error[_i] = (np.sign(Z_test.dot(theta_true)) != np.sign(X_test.dot(theta.value))).sum() / TEST
     return lambda_vals, test_error, train_error
 
 
@@ -178,20 +167,58 @@ def _(lambda_vals, test_error, train_error):
     # Plot the train and test error over the trade-off curve.
     import matplotlib.pyplot as plt
 
+    # magic command not supported in marimo; please file an issue to add support
+    # %config InlineBackend.figure_format = 'svg'
     plt.plot(lambda_vals, train_error, label="Train error")
     plt.plot(lambda_vals, test_error, label="Test error")
     plt.xscale("log")
     plt.legend(loc="upper left")
     plt.xlabel(r"$\lambda$", fontsize=16)
-    plt.ylabel("Error")
+    plt.show()
+    return (plt,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+        Below we plot $|\theta_{k}|$, $k=1,\ldots,55$, for the $\lambda$ that minimized the test error. Each $|\theta_{k}|$ is placed at position $(i,j)$ where $z_iz_j = x_k$. Notice that many $\theta_{k}$ are $0$, as we would expect with $\ell_1$ regularization.
+        """
+    )
+    return
+
+
+@app.cell
+def _(cp, lambd, lambda_vals, n, np, plt, prob, test_error, theta):
+    _idx = np.argmin(test_error)
+    lambd.value = lambda_vals[_idx]
+    prob.solve(solver=cp.SCS)
+    P = np.zeros((n, n))
+    count = 0
+    for _i in range(n):
+        for j in range(_i, n):
+            P[_i, j] = np.abs(theta.value[count])
+            count += 1
+    row_labels = range(1, n + 1)
+    column_labels = range(1, n + 1)
+    fig, ax = plt.subplots()
+    heatmap = ax.pcolor(P, cmap=plt.cm.Blues)
+    ax.set_xticks(np.arange(P.shape[1]) + 0.5, minor=False)
+    ax.set_yticks(np.arange(P.shape[0]) + 0.5, minor=False)
+    ax.invert_yaxis()
+    ax.xaxis.tick_top()
+    ax.set_xticklabels(column_labels, minor=False)
+    ax.set_yticklabels(row_labels, minor=False)
+    plt.xlabel('$z_i$', fontsize=16)
+    ax.xaxis.set_label_position('top')
+    plt.ylabel('$z_j$', fontsize=16)
     plt.show()
     return
 
 
 @app.cell
 def _():
-    import marimo as mo 
-
+    import marimo as mo
     return (mo,)
 
 
